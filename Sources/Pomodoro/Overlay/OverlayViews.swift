@@ -2,9 +2,7 @@ import SwiftUI
 import AppKit
 import PomodoroCore
 
-/// Область, за которую окно перетаскивается мышью.
-/// NSHostingView/NSView сам по себе перетаскивание borderless-панели
-/// не всегда запускает, поэтому тянем окно явно через performDrag.
+/// Маркер области, за которую OverlayPanel разрешает перетаскивание.
 struct WindowDragArea: NSViewRepresentable {
     func makeNSView(context: Context) -> DragNSView { DragNSView() }
     func updateNSView(_ nsView: DragNSView, context: Context) {}
@@ -12,9 +10,6 @@ struct WindowDragArea: NSViewRepresentable {
 
 final class DragNSView: NSView {
     override var mouseDownCanMoveWindow: Bool { true }
-    override func mouseDown(with event: NSEvent) {
-        window?.performDrag(with: event)
-    }
     override func rightMouseDown(with event: NSEvent) {} // не всплывающее меню
 }
 

@@ -16,17 +16,53 @@ final class OverlayPanel: NSPanel {
     /// false — тянется только за области WindowDragArea (для панели с кнопками).
     var dragAnywhere = false
 
-    /// Перехватываем события на уровне окна: надёжнее, чем полагаться на то,
-    /// что SwiftUI-хостинг пропустит mouseDown вниз по иерархии.
+    private var dragStartMouseLocation: NSPoint?
+    private var dragStartWindowOrigin: NSPoint?
+
+    /// Перемещаем панель по глобальным координатам мыши. Это надёжнее, чем
+    /// performDrag для borderless/nonactivating панели и не зависит от того,
+    /// какой именно SwiftUI-host view вернёт hitTest.
     override func sendEvent(_ event: NSEvent) {
-        if event.type == .leftMouseDown {
-            let hit = contentView?.hitTest(event.locationInWindow)
-            if dragAnywhere || hit is DragNSView {
-                performDrag(with: event)
+        switch event.type {
+        case .leftMouseDown:
+            if canStartDragging(at: event.locationInWindow) {
+                dragStartMouseLocation = NSEvent.mouseLocation
+                dragStartWindowOrigin = frame.origin
                 return
             }
+        case .leftMouseDragged:
+            if let startMouse = dragStartMouseLocation,
+               let startOrigin = dragStartWindowOrigin {
+                let mouseLocation = NSEvent.mouseLocation
+                setFrameOrigin(NSPoint(
+                    x: startOrigin.x + mouseLocation.x - startMouse.x,
+                    y: startOrigin.y + mouseLocation.y - startMouse.y
+                ))
+                return
+            }
+        case .leftMouseUp:
+            if dragStartMouseLocation != nil {
+                dragStartMouseLocation = nil
+                dragStartWindowOrigin = nil
+                return
+            }
+        default:
+            break
         }
         super.sendEvent(event)
+    }
+
+    private func canStartDragging(at pointInWindow: NSPoint) -> Bool {
+        guard let contentView else { return false }
+        if dragAnywhere { return true }
+
+        let pointInContent = contentView.convert(pointInWindow, from: nil)
+        var hitView = contentView.hitTest(pointInContent)
+        while let view = hitView {
+            if view is DragNSView { return true }
+            hitView = view.superview
+        }
+        return false
     }
 
     init(autosaveName: String, defaultRect: NSRect, dragAnywhere: Bool = false) {
