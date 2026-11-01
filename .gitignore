@@ -1,0 +1,6 @@
+.build/
+Pomodoro.app/
+Assets/AppIcon.icns
+Assets/AppIcon.iconset/
+screenshot.png
+.DS_Store
