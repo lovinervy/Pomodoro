@@ -52,7 +52,10 @@ public final class CycleStore {
 
     public func delete(_ id: UUID) {
         // Последний цикл не удаляем — движку нужен хотя бы один.
-        guard cycles.count > 1 else { return }
+        // Защищённый (встроенный «Стандартный») не удаляем никогда.
+        guard cycles.count > 1,
+              let target = cycles.first(where: { $0.id == id }),
+              !target.isProtected else { return }
         cycles.removeAll { $0.id == id }
         if selectedCycleID == id { selectedCycleID = cycles.first?.id }
         save()
@@ -64,6 +67,7 @@ public final class CycleStore {
         var copy = source
         copy.id = UUID()
         copy.name = source.name + " (копия)"
+        copy.isProtected = false // копию встроенного цикла удалять можно
         copy.phases = source.phases.map { Phase(kind: $0.kind, duration: $0.duration, title: $0.title) }
         return add(copy)
     }
@@ -89,6 +93,12 @@ public final class CycleStore {
         }
         cycles = payload.cycles
         selectedCycleID = payload.selectedCycleID
+        // Миграция со старых версий: защищаем первый (зашитый) цикл,
+        // если ни один не помечен защищённым.
+        if !cycles.isEmpty && !cycles.contains(where: \.isProtected) {
+            cycles[0].isProtected = true
+            save()
+        }
     }
 
     private func save() {

@@ -105,3 +105,61 @@ private func tempStore() -> (CycleStore, URL) {
     #expect(copy?.id != original.id)
     #expect(copy?.phases.map(\.id).allSatisfy { id in !original.phases.map(\.id).contains(id) } == true)
 }
+
+// MARK: - Защита встроенного цикла
+
+@Test func standardCycleIsProtected() {
+    #expect(Cycle.standard().isProtected == true)
+}
+
+@Test func protectedCycleCannotBeDeleted() {
+    let (store, _) = tempStore() // первый цикл — «Стандартный» (защищён)
+    let standard = store.cycles[0]
+    _ = store.add(Cycle(name: "Второй", phases: [Phase(kind: .focus, minutes: 10)]))
+    store.delete(standard.id)
+    #expect(store.cycles.count == 2)
+    #expect(store.cycles.contains(where: { $0.id == standard.id }))
+}
+
+@Test func unprotectedCycleCanBeDeleted() {
+    let (store, _) = tempStore()
+    let custom = store.add(Cycle(name: "Второй", phases: [Phase(kind: .focus, minutes: 10)]))
+    store.delete(custom.id)
+    #expect(store.cycles.count == 1)
+}
+
+@Test func duplicateOfProtectedIsUnprotected() {
+    let (store, _) = tempStore()
+    let copy = store.duplicate(store.cycles[0].id)
+    #expect(copy?.isProtected == false)
+    // И удалить её можно.
+    store.delete(copy!.id)
+    #expect(store.cycles.count == 1)
+}
+
+@Test func legacyCycleDecodesAsUnprotected() throws {
+    // Старое сохранение без поля isProtected.
+    let json = #"{"id":"00000000-0000-0000-0000-000000000002","name":"Старый","phases":[],"repeats":true}"#
+    let cycle = try JSONDecoder().decode(Cycle.self, from: Data(json.utf8))
+    #expect(cycle.isProtected == false)
+}
+
+@Test func legacyStoreMigratesFirstCycleToProtected() throws {
+    // Имитируем старый файл: циклы без isProtected.
+    let url = tempStoreURL()
+    let legacy = #"{"cycles":[{"id":"00000000-0000-0000-0000-000000000003","name":"Стандартный","phases":[{"id":"00000000-0000-0000-0000-000000000004","kind":"focus","duration":1500}],"repeats":true}],"selectedCycleID":"00000000-0000-0000-0000-000000000003"}"#
+    try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try legacy.write(to: url, atomically: true, encoding: .utf8)
+
+    let store = CycleStore(fileURL: url)
+    #expect(store.cycles[0].isProtected == true)
+    // И оно сохранилось.
+    let reloaded = CycleStore(fileURL: url)
+    #expect(reloaded.cycles[0].isProtected == true)
+}
+
+private func tempStoreURL() -> URL {
+    FileManager.default.temporaryDirectory
+        .appendingPathComponent(UUID().uuidString)
+        .appendingPathComponent("cycles.json")
+}

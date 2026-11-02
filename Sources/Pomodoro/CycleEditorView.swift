@@ -47,7 +47,15 @@ struct CycleEditorView: View {
             ForEach(vm.store.cycles) { cycle in
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(cycle.name)
+                        HStack(spacing: 4) {
+                            Text(cycle.name)
+                            if cycle.isProtected {
+                                Image(systemName: "lock.fill")
+                                    .font(.caption2)
+                                    .foregroundStyle(.tertiary)
+                                    .help("Встроенный цикл: редактировать можно, удалить нельзя")
+                            }
+                        }
                         Text(summary(for: cycle))
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -69,7 +77,7 @@ struct CycleEditorView: View {
                             vm.storeDidChange()
                         }
                     }
-                    if vm.store.cycles.count > 1 {
+                    if !cycle.isProtected && vm.store.cycles.count > 1 {
                         Button("Удалить", role: .destructive) {
                             vm.store.delete(cycle.id)
                             vm.storeDidChange()
@@ -78,8 +86,10 @@ struct CycleEditorView: View {
                 }
             }
         }
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+        .safeAreaInset(edge: .bottom) {
+            // Тулбар внутри колонки NavigationSplitView не рендерится,
+            // поэтому кнопка добавления — отдельной панелью снизу.
+            HStack {
                 Button {
                     let new = vm.store.add(Cycle(name: "Новый цикл", phases: [
                         Phase(kind: .focus, minutes: 25, title: "работа"),
@@ -88,9 +98,13 @@ struct CycleEditorView: View {
                     editingID = new.id
                     vm.storeDidChange()
                 } label: {
-                    Image(systemName: "plus")
+                    Label("Новый цикл", systemImage: "plus")
                 }
+                Spacer()
             }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(.bar)
         }
     }
 

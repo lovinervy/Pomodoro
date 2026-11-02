@@ -66,12 +66,28 @@ public struct Cycle: Codable, Equatable, Sendable, Identifiable {
     public var phases: [Phase]
     /// Начинать цикл заново после последней фазы.
     public var repeats: Bool
+    /// Встроенный цикл: редактировать можно, удалять нельзя.
+    public var isProtected: Bool
 
-    public init(id: UUID = UUID(), name: String, phases: [Phase], repeats: Bool = true) {
+    public init(id: UUID = UUID(), name: String, phases: [Phase], repeats: Bool = true,
+                isProtected: Bool = false) {
         self.id = id
         self.name = name
         self.phases = phases
         self.repeats = repeats
+        self.isProtected = isProtected
+    }
+
+    // Обратная совместимость: в старых сохранениях поля isProtected нет.
+    private enum CodingKeys: String, CodingKey { case id, name, phases, repeats, isProtected }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        phases = try c.decode([Phase].self, forKey: .phases)
+        repeats = try c.decode(Bool.self, forKey: .repeats)
+        isProtected = try c.decodeIfPresent(Bool.self, forKey: .isProtected) ?? false
     }
 
     /// Классический помодоро: 4 фокуса по 25 мин с короткими перерывами 5 мин,
@@ -92,6 +108,6 @@ public struct Cycle: Codable, Equatable, Sendable, Identifiable {
                 title: isLast ? "" : "перерыв"
             ))
         }
-        return Cycle(name: "Стандартный", phases: phases)
+        return Cycle(name: "Стандартный", phases: phases, isProtected: true)
     }
 }
