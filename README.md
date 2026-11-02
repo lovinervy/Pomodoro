@@ -1,5 +1,10 @@
 # 🍅 Pomodoro
 
+[![Release](https://img.shields.io/github/v/release/lovinervy/Pomodoro)](https://github.com/lovinervy/Pomodoro/releases)
+![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey)
+![Swift](https://img.shields.io/badge/swift-6-orange)
+[![License: PolyForm NC 1.0](https://img.shields.io/badge/license-PolyForm%20NC%201.0-blue)](LICENSE)
+
 Лёгкий нативный помодоро-таймер для macOS в каваи-стиле. Без Electron, без веб-обёрток — чистый SwiftUI, бинарник ~1 МБ, почти нулевое потребление ресурсов.
 
 ## Скриншоты
@@ -83,3 +88,7 @@ run.sh, bundle.sh       — сборка/запуск/упаковка
 - `cycles.json` — пресеты циклов
 - `tasks.json` — задачи
 - `sessions.jsonl` — журнал сессий (по записи на строку, устойчив к обрывам)
+
+## Лицензия
+
+[PolyForm Noncommercial 1.0.0](LICENSE) — код в свободном плавании: используйте, изучайте, меняйте и делитесь в любых **некоммерческих** целях. **Коммерческое использование запрещено.** Для коммерческого применения — напишите автору.
