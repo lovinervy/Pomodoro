@@ -1,6 +1,7 @@
 # 🍅 Pomodoro
 
 [![Release](https://img.shields.io/github/v/release/lovinervy/Pomodoro)](https://github.com/lovinervy/Pomodoro/releases)
+[![CI](https://github.com/lovinervy/Pomodoro/actions/workflows/ci-release.yml/badge.svg)](https://github.com/lovinervy/Pomodoro/actions/workflows/ci-release.yml)
 ![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey)
 ![Swift](https://img.shields.io/badge/swift-6-orange)
 [![License: PolyForm NC 1.0](https://img.shields.io/badge/license-PolyForm%20NC%201.0-blue)](LICENSE)
